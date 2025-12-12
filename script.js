@@ -23,16 +23,20 @@ class Player {
         this.y = this.game.height / 2;
         this.radius = 40;
         this.image = document.getElementById('player');
+        this.aim;
     }
     draw(context){
         context.drawImage(this.image, this.x - this.radius, this.y - this.radius);
+        // debug circle
         // context.beginPath();
         // context.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
         // context.stroke();
     }
     // player moves so we need an update method
     update(){
-
+        this.aim = this.game.calcAim(this.game.mouse, this.game.planet);
+        this.x= this.game.planet.x + (this.game.planet.radius + this.radius) * this.aim[0];
+        this.y= this.game.planet.y + (this.game.planet.radius + this.radius) * this.aim[1];
     }
 }
 
@@ -56,11 +60,21 @@ class Game {
     render(context){
         this.planet.draw(context);
         this.player.draw(context);
+        this.player.update();
         // draw line from planet to mouse
         // context.beginPath();
         // context.moveTo(this.planet.x, this.planet.y);
         // context.lineTo(this.mouse.x, this.mouse.y);
         // context.stroke();
+    }
+    // gives us the distance and direction from point a to point b
+    calcAim(a, b){
+        const dx = a.x - b.x;
+        const dy = a.y - b.y;
+        const distance = Math.hypot(dx, dy);
+        const aimX = (dx / distance);
+        const aimY = (dy / distance);
+        return [ aimX, aimY, dx, dy ]
     }
 }
 
