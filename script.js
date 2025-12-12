@@ -4,9 +4,13 @@ class Planet {
         this.x = this.game.width / 2;
         this.y = this.game.height / 2;
         this.radius = 80;
+        this.image = document.getElementById('planet');
     }
 
     draw(context){
+        console.log(this.image);
+
+        context.drawImage(this.image, this.x - 100, this.y - 100);
         context.beginPath();
         context.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
         context.stroke()
