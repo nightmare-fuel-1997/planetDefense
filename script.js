@@ -54,7 +54,7 @@ class Player {
   }
   shoot() {
     const projectile = this.game.getProjectile();
-    if (projectile) projectile.start(this.x, this.y);
+    if (projectile) projectile.start(this.x, this.y, this.aim[0], this.aim[1]);
   }
 }
 
@@ -66,17 +66,20 @@ class Projectile {
     this.radius = 20;
     this.speedX = 1;
     this.speedY = 1;
+    this.speedModifier = 5;
     this.free = true;
   }
 
-  start(x, y) {
+  start(x, y, speedX, speedY) {
     this.free = false;
     this.x = x;
     this.y = y;
+    this.speedX = speedX * this.speedModifier;
+    this.speedY = speedY * this.speedModifier;
   }
 
   reset() {
-    this.free;
+    this.free = true;
   }
 
   draw(context) {
@@ -91,6 +94,15 @@ class Projectile {
     if (!this.free) {
       this.x += this.speedX;
       this.y += this.speedY;
+    }
+    //reset if off screen
+    if (
+      this.x < 0 ||
+      this.x > this.game.width ||
+      this.y < 0 ||
+      this.y > this.game.height
+    ) {
+      this.reset();
     }
   }
 }
@@ -145,6 +157,7 @@ class Game {
     }
   }
   // gives us the distance and direction from point a to point b
+  // helps us with making two object move toward each other or away from each other
   calcAim(a, b) {
     const dx = a.x - b.x;
     const dy = a.y - b.y;
