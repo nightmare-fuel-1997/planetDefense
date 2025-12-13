@@ -130,7 +130,9 @@ class Enemy {
   }
   start() {
     this.free = false;
-
+    this.frameX = 0;
+    this.lives = this.maxLives;
+    this.frameY = Math.floor(Math.random() * 4);
     //spawn at random edge
     if (Math.random() < 0.5) {
       //top or bottom
@@ -150,12 +152,15 @@ class Enemy {
   reset() {
     this.free = true;
   }
+  hit(damage) {
+    this.lives -= damage;
+  }
   draw(context) {
     if (!this.free) {
       context.drawImage(
         this.image,
-        0,
-        0,
+        this.frameX * this.width,
+        this.height * this.frameY,
         this.width,
         this.height,
         this.x - this.radius,
@@ -168,6 +173,7 @@ class Enemy {
         context.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
         context.fillStyle = "red";
         context.stroke();
+        context.fillText(this.lives, this.x, this.y);
       }
     }
   }
@@ -186,11 +192,18 @@ class Enemy {
 
       //check collision with projectiles
       this.game.projectilePool.forEach((projectile) => {
-        if (!projectile.free && this.game.checkCollision(this, projectile)) {
-          this.reset();
+        if (!projectile.free && this.game.checkCollision(this, projectile) && this.lives >= 1) {
           projectile.reset();
+          this.hit(1);
         }
       });
+      //handle sprite animation
+      if (this.lives <= 0 && this.game.spriteUpdate) {
+        this.frameX++;
+      }
+      if (this.frameX > this.maxFrame) {
+        this.reset();
+      }
     }
   }
 }
@@ -199,6 +212,11 @@ class Astroid extends Enemy {
   constructor(game) {
     super(game);
     this.image = document.getElementById("astroid");
+    this.frameX = 0;
+    this.frameY = Math.floor(Math.random() * 4);
+    this.maxFrame = 7;
+    this.lives = 5;
+    this.maxLives = this.lives;
   }
 }
 class Game {
@@ -219,7 +237,12 @@ class Game {
     this.createEnemyPool();
     this.enemyPool[0].start();
     this.enemyTimer = 0;
-    this.enemyInterval = 1000;
+    this.enemyInterval = 1700;
+
+    // to control sprite animation speed
+    this.spriteUpdate = false;
+    this.spriteTimer = 0;
+    this.spriteInterval = 100;
     this.mouse = {
       x: 0,
       y: 0,
@@ -271,6 +294,14 @@ class Game {
       context.moveTo(this.planet.x, this.planet.y);
       context.lineTo(this.mouse.x, this.mouse.y);
       context.stroke();
+    }
+    // periodically update sprite frames
+    if (this.spriteTimer < this.spriteInterval) {
+      this.spriteTimer += deltaTime;
+      this.spriteUpdate = false;
+    } else {
+      this.spriteTimer = 0;
+      this.spriteUpdate = true;
     }
   }
   // gives us the distance and direction from point a to point b
@@ -328,7 +359,11 @@ window.addEventListener("load", function () {
   canvas.width = 800;
   canvas.height = 800;
   ctx.strokeStyle = "white";
+  ctx.fillStyle = "white";
   ctx.lineWidth = 2;
+  ctx.font = "50px Helvetica";
+  ctx.textAlign = "center";
+  ctx.baseline = "middle";
 
   const game = new Game(canvas);
   let lastTime = 0;
