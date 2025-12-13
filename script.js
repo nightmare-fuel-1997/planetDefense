@@ -127,10 +127,12 @@ class Enemy {
     this.speedX = 0;
     this.speedY = 0;
     this.angle = 0;
+    this.collided = false;
     this.free = true;
   }
   start() {
     this.free = false;
+    this.collided = false;
     this.frameX = 0;
     this.lives = this.maxLives;
     this.frameY = Math.floor(Math.random() * 4);
@@ -156,7 +158,7 @@ class Enemy {
   }
   hit(damage) {
     this.lives -= damage;
-    if(this.lives >= 1) this.frameX++;
+    if (this.lives >= 1) this.frameX++;
   }
   draw(context) {
     if (!this.free) {
@@ -193,17 +195,23 @@ class Enemy {
         this.lives = 0;
         this.speedX = 0;
         this.speedY = 0;
+        this.collided = true;
       }
       //check collision with player
       if (this.game.checkCollision(this, this.game.player)) {
         this.lives = 0;
         this.speedX = 0;
         this.speedY = 0;
+        this.collided = true;
       }
 
       //check collision with projectiles
       this.game.projectilePool.forEach((projectile) => {
-        if (!projectile.free && this.game.checkCollision(this, projectile) && this.lives >= 1) {
+        if (
+          !projectile.free &&
+          this.game.checkCollision(this, projectile) &&
+          this.lives >= 1
+        ) {
           projectile.reset();
           this.hit(1);
         }
@@ -214,6 +222,7 @@ class Enemy {
       }
       if (this.frameX > this.maxFrame) {
         this.reset();
+        if (!this.collided) this.game.score += this.maxLives;
       }
     }
   }
@@ -266,6 +275,8 @@ class Game {
     this.spriteUpdate = false;
     this.spriteTimer = 0;
     this.spriteInterval = 100;
+    this.score = 0;
+    this.winnigScore = 30;
     this.mouse = {
       x: 0,
       y: 0,
@@ -289,6 +300,7 @@ class Game {
   }
   render(context, deltaTime) {
     this.planet.draw(context);
+    this.drawStatusText(context);
     this.player.draw(context);
     this.player.update();
 
@@ -303,12 +315,14 @@ class Game {
     });
 
     //spawn enemies
-    if (this.enemyTimer < this.enemyInterval) {
-      this.enemyTimer += deltaTime;
-    } else {
-      this.enemyTimer = 0;
-      const enemy = this.getEnemy();
-      if (enemy) enemy.start();
+    if (!this.gameOver) {
+      if (this.enemyTimer < this.enemyInterval) {
+        this.enemyTimer += deltaTime;
+      } else {
+        this.enemyTimer = 0;
+        const enemy = this.getEnemy();
+        if (enemy) enemy.start();
+      }
     }
 
     // draw line from planet to mouse
@@ -326,7 +340,36 @@ class Game {
       this.spriteTimer = 0;
       this.spriteUpdate = true;
     }
+    // win or lose condition
+    if (this.score >= this.winnigScore && !this.gameOver) {
+      this.gameOver = true;
+    }
   }
+
+  drawStatusText(context) {
+    context.save();
+    context.textAlign = "left";
+    context.font = "25px";
+    context.fillText(`Score: ${this.score}`, 20, 40);
+    context.restore();
+    if (this.gameOver) {
+      context.textAlign = "center";
+      let message1;
+      let message2;
+      if (this.score >= this.winnigScore) {
+        message1 = "You saved the planet!";
+        message2 = "Congratulations!";
+      } else {
+        message1 = "Planet destroyed!";
+        message2 = "Game Over";
+      }
+      context.font = "80px Impact";
+      context.fillText(message1, this.width / 2, this.height / 2 - 40);
+      context.font = "50px Impact";
+      context.fillText(message2, this.width / 2, this.height / 2 + 40);
+    }
+  }
+
   // gives us the distance and direction from point a to point b
   // helps us with making two object move toward each other or away from each other
   calcAim(a, b) {
