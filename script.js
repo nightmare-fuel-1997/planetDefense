@@ -137,7 +137,7 @@ class Enemy {
     const aim = this.game.calcAim(this, this.game.planet);
     this.speedX = aim[0];
     this.speedY = aim[1];
-    }
+  }
   reset() {
     this.free = true;
   }
@@ -153,6 +153,14 @@ class Enemy {
     if (!this.free) {
       this.x += this.speedX;
       this.y += this.speedY;
+      //check collision with planet
+      if (this.game.checkCollision(this, this.game.planet)) {
+        this.reset();
+      }
+      //check collision with player
+      if (this.game.checkCollision(this, this.game.player)) {
+        this.reset();
+      }
     }
   }
 }
@@ -231,6 +239,13 @@ class Game {
     return [aimX, aimY, dx, dy];
   }
 
+  checkCollision(a, b) {
+    const dx = a.x - b.x;
+    const dy = a.y - b.y;
+    const distance = Math.hypot(dx, dy);
+    const sumOffRadii = a.radius + b.radius;
+    return distance < sumOffRadii;
+  }
   //the method that creates the projectile pool
   createProjectilePool() {
     for (let i = 0; i < this.numberOfProjectiles; i++) {
@@ -258,7 +273,8 @@ class Game {
       if (enemy.free) {
         return enemy;
       }
-    }  }
+    }
+  }
 }
 
 window.addEventListener("load", function () {
