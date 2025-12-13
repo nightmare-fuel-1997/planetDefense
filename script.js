@@ -135,10 +135,12 @@ class Enemy {
     if (Math.random() < 0.5) {
       //top or bottom
       this.x = Math.random() * this.game.width;
-      this.y = Math.random() < 0.5 ? 0 - this.radius : this.game.height + this.radius;
+      this.y =
+        Math.random() < 0.5 ? 0 - this.radius : this.game.height + this.radius;
     } else {
       //left or right
-      this.x = Math.random() < 0.5 ? 0 - this.radius : this.game.width + this.radius;
+      this.x =
+        Math.random() < 0.5 ? 0 - this.radius : this.game.width + this.radius;
       this.y = Math.random() * this.game.height;
     }
     const aim = this.game.calcAim(this, this.game.planet);
@@ -150,10 +152,23 @@ class Enemy {
   }
   draw(context) {
     if (!this.free) {
-      context.beginPath();
-      context.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-      context.fillStyle = "red";
-      context.stroke();
+      context.drawImage(
+        this.image,
+        0,
+        0,
+        this.width,
+        this.height,
+        this.x - this.radius,
+        this.y - this.radius,
+        this.width,
+        this.height
+      );
+      if (this.game.debug) {
+        context.beginPath();
+        context.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+        context.fillStyle = "red";
+        context.stroke();
+      }
     }
   }
   update() {
@@ -171,10 +186,7 @@ class Enemy {
 
       //check collision with projectiles
       this.game.projectilePool.forEach((projectile) => {
-        if (
-          !projectile.free &&
-          this.game.checkCollision(this, projectile)
-        ) {
+        if (!projectile.free && this.game.checkCollision(this, projectile)) {
           this.reset();
           projectile.reset();
         }
@@ -183,6 +195,12 @@ class Enemy {
   }
 }
 
+class Astroid extends Enemy {
+  constructor(game) {
+    super(game);
+    this.image = document.getElementById("astroid");
+  }
+}
 class Game {
   constructor(canvas) {
     this.canvas = canvas;
@@ -240,14 +258,12 @@ class Game {
 
     //spawn enemies
     if (this.enemyTimer < this.enemyInterval) {
-        this.enemyTimer += deltaTime;
-    }else {
-        this.enemyTimer = 0;
-        const enemy = this.getEnemy();
-        if (enemy) enemy.start();
+      this.enemyTimer += deltaTime;
+    } else {
+      this.enemyTimer = 0;
+      const enemy = this.getEnemy();
+      if (enemy) enemy.start();
     }
-
-
 
     // draw line from planet to mouse
     if (this.debug) {
@@ -293,7 +309,7 @@ class Game {
   //the method that creates the enemy pool
   createEnemyPool() {
     for (let i = 0; i < this.numberOfEnemies; i++) {
-      this.enemyPool.push(new Enemy(this));
+      this.enemyPool.push(new Astroid(this));
     }
   }
 
@@ -315,14 +331,13 @@ window.addEventListener("load", function () {
   ctx.lineWidth = 2;
 
   const game = new Game(canvas);
-    let lastTime = 0;
+  let lastTime = 0;
   function animate(timeStamp) {
     const deltaTime = timeStamp - lastTime;
     lastTime = timeStamp;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     game.render(ctx, deltaTime);
     requestAnimationFrame(animate);
-
   }
   this.requestAnimationFrame(animate);
 });
