@@ -54,7 +54,13 @@ class Player {
   }
   shoot() {
     const projectile = this.game.getProjectile();
-    if (projectile) projectile.start(this.x, this.y, this.aim[0], this.aim[1]);
+    if (projectile)
+      projectile.start(
+        this.x + this.radius * this.aim[0],
+        this.y + this.radius * this.aim[1],
+        this.aim[0],
+        this.aim[1]
+      );
   }
 }
 
@@ -63,7 +69,7 @@ class Projectile {
     this.game = game;
     this.x;
     this.y;
-    this.radius = 20;
+    this.radius = 5;
     this.speedX = 1;
     this.speedY = 1;
     this.speedModifier = 5;
@@ -84,9 +90,12 @@ class Projectile {
 
   draw(context) {
     if (!this.free) {
+      context.save();
       context.beginPath();
       context.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+      context.fillStyle = "gold";
       context.fill();
+      context.restore();
     }
   }
 
