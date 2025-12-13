@@ -13,7 +13,7 @@ class Planet {
       // debug circle
       context.beginPath();
       context.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-      context.stroke()
+      context.stroke();
     }
   }
 }
@@ -52,40 +52,47 @@ class Player {
       (this.game.planet.radius + this.radius) * this.aim[1];
     this.angle = Math.atan2(this.aim[3], this.aim[2]);
   }
+  shoot() {
+    const projectile = this.game.getProjectile();
+    if (projectile) projectile.start(this.x, this.y);
+  }
 }
 
 class Projectile {
-    constructor(game){
-        this.game = game;
-        this.x;
-        this.y;
-        this.radius = 20;
-        this.speedX= 1;
-        this.speedY= 1;
-        this.free = true;
-    }
+  constructor(game) {
+    this.game = game;
+    this.x;
+    this.y;
+    this.radius = 20;
+    this.speedX = 1;
+    this.speedY = 1;
+    this.free = true;
+  }
 
-    start(){
-        this.free = false;
-    }
+  start(x, y) {
+    this.free = false;
+    this.x = x;
+    this.y = y;
+  }
 
-    reset(){
-        this.free
-    }
+  reset() {
+    this.free;
+  }
 
-    draw(context){
-        if(!this.free){
-            context.beginPath();
-            context.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-        }
+  draw(context) {
+    if (!this.free) {
+      context.beginPath();
+      context.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+      context.fill();
     }
+  }
 
-    update(){
-        if(!this.free){
-            this.x += this.speedX;
-            this.y += this.speedY;
-        }
+  update() {
+    if (!this.free) {
+      this.x += this.speedX;
+      this.y += this.speedY;
     }
+  }
 }
 
 class Game {
@@ -96,6 +103,10 @@ class Game {
     this.planet = new Planet(this);
     this.player = new Player(this);
     this.debug = true;
+
+    this.projectilePool = [];
+    this.numberOfProjectiles = 20;
+    this.createProjectilePool();
     this.mouse = {
       x: 0,
       y: 0,
@@ -104,6 +115,12 @@ class Game {
       const rect = this.canvas.getBoundingClientRect();
       this.mouse.x = e.clientX - rect.left;
       this.mouse.y = e.clientY - rect.top;
+    });
+    window.addEventListener("mousedown", (e) => {
+      const rect = this.canvas.getBoundingClientRect();
+      this.mouse.x = e.clientX - rect.left;
+      this.mouse.y = e.clientY - rect.top;
+      this.player.shoot();
     });
     window.addEventListener("keyup", (e) => {
       if (e.key === "d") {
@@ -115,6 +132,10 @@ class Game {
     this.planet.draw(context);
     this.player.draw(context);
     this.player.update();
+    this.projectilePool.forEach((projectile) => {
+      projectile.draw(context);
+      projectile.update();
+    });
     // draw line from planet to mouse
     if (this.debug) {
       context.beginPath();
@@ -131,6 +152,21 @@ class Game {
     const aimX = (dx / distance) * -1;
     const aimY = (dy / distance) * -1;
     return [aimX, aimY, dx, dy];
+  }
+
+  //the method that creates the projectile pool
+  createProjectilePool() {
+    for (let i = 0; i < this.numberOfProjectiles; i++) {
+      this.projectilePool.push(new Projectile(this));
+    }
+  }
+  //the method that gets a free projectile from the pool
+  getProjectile() {
+    for (let projectile of this.projectilePool) {
+      if (projectile.free) {
+        return projectile;
+      }
+    }
   }
 }
 
