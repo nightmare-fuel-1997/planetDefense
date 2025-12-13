@@ -480,12 +480,61 @@ window.addEventListener("load", function () {
 
   const game = new Game(canvas);
   let lastTime = 0;
+  let animationId = null;
+  let isPaused = false;
+
   function animate(timeStamp) {
     const deltaTime = timeStamp - lastTime;
     lastTime = timeStamp;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     game.render(ctx, deltaTime);
-    requestAnimationFrame(animate);
+    if (!isPaused) {
+      animationId = requestAnimationFrame(animate);
+    }
   }
-  this.requestAnimationFrame(animate);
+
+  // Start game when button is clicked
+  const startButton = document.getElementById('start-button');
+  const introOverlay = document.getElementById('intro-overlay');
+  const gameControls = document.getElementById('game-controls');
+  const pauseButton = document.getElementById('pause-button');
+  const restartButton = document.getElementById('restart-button');
+
+  startButton.addEventListener('click', function() {
+    introOverlay.style.display = 'none';
+    gameControls.style.display = 'flex';
+    isPaused = false;
+    lastTime = 0;
+    animationId = requestAnimationFrame(animate);
+  });
+
+  // Pause/unpause game
+  pauseButton.addEventListener('click', function() {
+    isPaused = !isPaused;
+    if (isPaused) {
+      pauseButton.textContent = 'RESUME';
+      if (animationId) {
+        cancelAnimationFrame(animationId);
+      }
+    } else {
+      pauseButton.textContent = 'PAUSE';
+      lastTime = performance.now();
+      animationId = requestAnimationFrame(animate);
+    }
+  });
+
+  // Restart game
+  restartButton.addEventListener('click', function() {
+    // Cancel current animation
+    if (animationId) {
+      cancelAnimationFrame(animationId);
+    }
+    // Show intro and hide controls
+    introOverlay.style.display = 'flex';
+    gameControls.style.display = 'none';
+    pauseButton.textContent = 'PAUSE';
+    isPaused = false;
+    // Reload the page to reset everything
+    location.reload();
+  });
 });
