@@ -126,6 +126,7 @@ class Enemy {
     this.height = this.radius * 2;
     this.speedX = 0;
     this.speedY = 0;
+    this.speedModifier = Math.random() * 0.7 + 0.1;
     this.angle = 0;
     this.collided = false;
     this.free = true;
@@ -149,8 +150,8 @@ class Enemy {
       this.y = Math.random() * this.game.height;
     }
     const aim = this.game.calcAim(this, this.game.planet);
-    this.speedX = aim[0];
-    this.speedY = aim[1];
+    this.speedX = aim[0] * this.speedModifier;
+    this.speedY = aim[1] * this.speedModifier;
     this.angle = Math.atan2(aim[3], aim[2]) + Math.PI * 0.5;
   }
   reset() {
@@ -271,7 +272,7 @@ class Game {
     this.createEnemyPool();
     this.enemyPool[0].start();
     this.enemyTimer = 0;
-    this.enemyInterval = 1700;
+    this.enemyInterval = 1000;
 
     // to control sprite animation speed
     this.spriteUpdate = false;
@@ -345,7 +346,10 @@ class Game {
       this.spriteUpdate = true;
     }
     // win or lose condition
-    if (this.score >= this.winnigScore && !this.gameOver || this.lives <= 0 && !this.gameOver) {
+    if (
+      (this.score >= this.winnigScore && !this.gameOver) ||
+      (this.lives <= 0 && !this.gameOver)
+    ) {
       this.gameOver = true;
     }
   }
@@ -356,7 +360,7 @@ class Game {
     context.font = "25px";
     context.fillText(`Score: ${this.score}`, 20, 40);
     for (let i = 0; i < this.lives; i++) {
-        context.fillRect(20 + 15 * i, 60, 10, 30)
+      context.fillRect(20 + 15 * i, 60, 10, 30);
     }
     if (this.gameOver) {
       context.textAlign = "center";
@@ -413,8 +417,14 @@ class Game {
   //the method that creates the enemy pool
   createEnemyPool() {
     for (let i = 0; i < this.numberOfEnemies; i++) {
-      // this.enemyPool.push(new Astroid(this));
-      this.enemyPool.push(new Lobstermorph(this));
+      let randomNumber = Math.random();
+      if (randomNumber < 0.25) {
+        this.enemyPool.push(new Astroid(this));
+      }else{
+        this.enemyPool.push(new Lobstermorph(this));
+      }
+
+
     }
   }
 
