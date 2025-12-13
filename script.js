@@ -191,18 +191,20 @@ class Enemy {
       this.x += this.speedX;
       this.y += this.speedY;
       //check collision with planet
-      if (this.game.checkCollision(this, this.game.planet)) {
+      if (this.game.checkCollision(this, this.game.planet) && this.lives >= 1) {
         this.lives = 0;
         this.speedX = 0;
         this.speedY = 0;
         this.collided = true;
+        this.game.lives--;
       }
       //check collision with player
-      if (this.game.checkCollision(this, this.game.player)) {
+      if (this.game.checkCollision(this, this.game.player) && this.lives >= 1) {
         this.lives = 0;
         this.speedX = 0;
         this.speedY = 0;
         this.collided = true;
+        this.game.lives--;
       }
 
       //check collision with projectiles
@@ -277,6 +279,8 @@ class Game {
     this.spriteInterval = 100;
     this.score = 0;
     this.winnigScore = 30;
+    this.lives = 5;
+
     this.mouse = {
       x: 0,
       y: 0,
@@ -341,7 +345,7 @@ class Game {
       this.spriteUpdate = true;
     }
     // win or lose condition
-    if (this.score >= this.winnigScore && !this.gameOver) {
+    if (this.score >= this.winnigScore && !this.gameOver || this.lives <= 0 && !this.gameOver) {
       this.gameOver = true;
     }
   }
@@ -351,7 +355,9 @@ class Game {
     context.textAlign = "left";
     context.font = "25px";
     context.fillText(`Score: ${this.score}`, 20, 40);
-    context.restore();
+    for (let i = 0; i < this.lives; i++) {
+        context.fillRect(20 + 15 * i, 60, 10, 30)
+    }
     if (this.gameOver) {
       context.textAlign = "center";
       let message1;
@@ -364,10 +370,11 @@ class Game {
         message2 = "Game Over";
       }
       context.font = "80px Impact";
-      context.fillText(message1, this.width / 2, this.height / 2 - 40);
+      context.fillText(message1, this.width / 2, this.height / 2 - 160);
       context.font = "50px Impact";
-      context.fillText(message2, this.width / 2, this.height / 2 + 40);
+      context.fillText(message2, this.width / 2, this.height / 2 + 160);
     }
+    context.restore();
   }
 
   // gives us the distance and direction from point a to point b
