@@ -254,6 +254,17 @@ class Lobstermorph extends Enemy {
     this.maxLives = this.lives;
   }
 }
+class Beetlemorph extends Enemy {
+  constructor(game) {
+    super(game);
+    this.image = document.getElementById("beetleMorph");
+    this.frameX = 0;
+    this.frameY = Math.floor(Math.random() * 4);
+    this.maxFrame = 3;
+    this.lives = 1;
+    this.maxLives = this.lives;
+  }
+}
 class Game {
   constructor(canvas) {
     this.canvas = canvas;
@@ -420,6 +431,8 @@ class Game {
       let randomNumber = Math.random();
       if (randomNumber < 0.25) {
         this.enemyPool.push(new Astroid(this));
+      }else if (randomNumber < 0.5){
+        this.enemyPool.push(new Beetlemorph(this));
       }else{
         this.enemyPool.push(new Lobstermorph(this));
       }
