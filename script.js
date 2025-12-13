@@ -132,8 +132,15 @@ class Enemy {
     this.free = false;
 
     //spawn at random edge
-    this.x = Math.random() * this.game.width;
-    this.y = Math.random() * this.game.height;
+    if (Math.random() < 0.5) {
+      //top or bottom
+      this.x = Math.random() * this.game.width;
+      this.y = Math.random() < 0.5 ? 0 - this.radius : this.game.height + this.radius;
+    } else {
+      //left or right
+      this.x = Math.random() < 0.5 ? 0 - this.radius : this.game.width + this.radius;
+      this.y = Math.random() * this.game.height;
+    }
     const aim = this.game.calcAim(this, this.game.planet);
     this.speedX = aim[0];
     this.speedY = aim[1];
@@ -161,6 +168,17 @@ class Enemy {
       if (this.game.checkCollision(this, this.game.player)) {
         this.reset();
       }
+
+      //check collision with projectiles
+      this.game.projectilePool.forEach((projectile) => {
+        if (
+          !projectile.free &&
+          this.game.checkCollision(this, projectile)
+        ) {
+          this.reset();
+          projectile.reset();
+        }
+      });
     }
   }
 }
@@ -182,9 +200,8 @@ class Game {
     this.numberOfEnemies = 20;
     this.createEnemyPool();
     this.enemyPool[0].start();
-    this.enemyPool[1].start();
-    this.enemyPool[2].start();
-    this.enemyPool[3].start();
+    this.enemyTimer = 0;
+    this.enemyInterval = 1000;
     this.mouse = {
       x: 0,
       y: 0,
@@ -206,7 +223,7 @@ class Game {
       }
     });
   }
-  render(context) {
+  render(context, deltaTime) {
     this.planet.draw(context);
     this.player.draw(context);
     this.player.update();
@@ -220,6 +237,18 @@ class Game {
       enemy.draw(context);
       enemy.update();
     });
+
+    //spawn enemies
+    if (this.enemyTimer < this.enemyInterval) {
+        this.enemyTimer += deltaTime;
+    }else {
+        this.enemyTimer = 0;
+        const enemy = this.getEnemy();
+        if (enemy) enemy.start();
+    }
+
+
+
     // draw line from planet to mouse
     if (this.debug) {
       context.beginPath();
@@ -286,11 +315,14 @@ window.addEventListener("load", function () {
   ctx.lineWidth = 2;
 
   const game = new Game(canvas);
-
-  function animate() {
+    let lastTime = 0;
+  function animate(timeStamp) {
+    const deltaTime = timeStamp - lastTime;
+    lastTime = timeStamp;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    game.render(ctx);
+    game.render(ctx, deltaTime);
     requestAnimationFrame(animate);
+
   }
   this.requestAnimationFrame(animate);
 });
